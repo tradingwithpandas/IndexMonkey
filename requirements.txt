@@ -1,0 +1,8 @@
+pandas
+yfinance
+openpyxl
+TA-Lib
+SQLAlchemy
+requests
+seaborn
+matplotlib
