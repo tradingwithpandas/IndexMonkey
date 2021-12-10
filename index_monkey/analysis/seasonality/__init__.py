@@ -31,4 +31,5 @@ def get_historic_specific_month_performance(ticker, month1, month2):
     px_hist['MonthlyDiff'] = px_hist['Close'] - px_hist['PrevClose']
     px_hist = px_hist[px_hist['Date'].dt.month == month2]
     px_hist['Return%'] = px_hist['MonthlyDiff'] / px_hist['PrevClose']
+    px_hist = px_hist[~px_hist['Return%'].isna()]
     return px_hist
