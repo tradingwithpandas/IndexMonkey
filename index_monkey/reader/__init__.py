@@ -1,13 +1,10 @@
 import datetime
-import os
-import pandas as pd
-from ..constants import INDEX_MEMBER_FILE_PATH, PRICE_DATA_FILE_PATH, DB_NAME
-import yfinance as yf
-from index_monkey.utils import split_list
-from json.decoder import JSONDecodeError
-from ..model import engine
-from functools import lru_cache
 import sqlite3
+from functools import lru_cache
+
+import pandas as pd
+
+from ..constants import DB_NAME
 
 
 @lru_cache()
