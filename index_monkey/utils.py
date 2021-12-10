@@ -1,3 +1,5 @@
+import datetime
+
 
 def get_first_biz_day_of_month(eff_date):
     # ToDo - See if you can handle missing dates based on exchange holidays
@@ -19,7 +21,7 @@ def get_first_biz_day_of_month(eff_date):
 
 
 def check_valid_month(month):
-    if month < 1 or month > 12:
+    if month and month < 1 or month > 12:
         raise ValueError(f'Month should be between 1 and 12. You passed {month}')
 
 
