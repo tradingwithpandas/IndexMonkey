@@ -17,8 +17,8 @@ def connection():
 
 class PriceLoader(PriceReader):
 
-    def __init__(self, indexname, start_date=None, end_date=None):
-        super().__init__(indexname, start_date, end_date)
+    def __init__(self, indexname, start_date=None, end_date=None, use_latest_index_comp=False):
+        super().__init__(indexname, start_date, end_date, use_latest_index_weighting=use_latest_index_comp)
         self._loaded_prices = None
 
     @property
@@ -36,6 +36,10 @@ class PriceLoader(PriceReader):
     @staticmethod
     def is_date_range_covered(start_date_in_db, end_date_in_db, query_start_date, query_end_date):
         return query_start_date <= start_date_in_db and end_date_in_db >= query_end_date
+
+    def fetch_prices(self):
+        prices_df = self._load_prices_from_yf()
+        self.save_prices(prices_df)
 
     def _generate_yf_query_args_based_on_data_in_db(self, data_in_db, tickers, start_date, end_date, refresh):
         yf_query_args = {}
@@ -78,7 +82,11 @@ class PriceLoader(PriceReader):
             px_hist = px_hist.rename(columns={'Date': 'pdate', 'Open': 'open', 'High': 'high', 'Low': 'low',
                                               'Close': 'close', 'Volume': 'volume', 'Dividends': 'dividends',
                                               'Stock Splits': 'stock_splits'})
-            px_hist = px_hist[['pdate', 'ticker', 'open', 'high', 'low', 'close', 'volume', 'stock_splits']]
+            px_hist['pdate'] = px_hist['pdate'].apply(lambda dt: dt.date())
+            if 'stock_splits' not in px_hist.columns:
+                print(ticker)
+            px_hist = px_hist[['pdate', 'ticker', 'open', 'high', 'low', 'close', 'volume', 'dividends',
+                               'stock_splits']]
             if full_px_history is not None:
                 full_px_history = pd.concat([full_px_history, px_hist])
             else:
@@ -103,28 +111,3 @@ class PriceLoader(PriceReader):
 
         self.loaded_prices = full_px_history
         return full_px_history
-
-    # def _load_prices_from_yf_bulk(self, min_step=51):
-    #     member_df = self.member_reader.load()
-    #     tickers = member_df['Symbol'].unique().tolist()
-    #     full_px_history = None
-    #     px_hist_kwargs = {'threads': False, 'group_by': 'ticker'}
-    #     if self.start_date:
-    #         px_hist_kwargs['start'] = self.start_date.strftime('%Y-%m-%d')
-    #     if self.end_date:
-    #         px_hist_kwargs['end'] = self.end_date.strftime('%Y-%m-%d')
-    #     if not px_hist_kwargs:
-    #         px_hist_kwargs['period'] = 'max'
-    #     ticker_lists = split_list(tickers, min_step)
-    #
-    #     for ticker_list in ticker_lists:
-    #         tickers_str = ' '.join(ticker_list)
-    #         px_hist = yf.download(tickers_str, **px_hist_kwargs)
-    #         px_hist = px_hist.stack(level=0).rename_axis(['Date', 'Ticker']).reset_index(level=1)
-    #         if full_px_history is not None:
-    #             full_px_history = pd.concat(full_px_history, px_hist)
-    #         else:
-    #             full_px_history = px_hist
-    #
-    #     self.loaded_prices = full_px_history
-    #     return full_px_history

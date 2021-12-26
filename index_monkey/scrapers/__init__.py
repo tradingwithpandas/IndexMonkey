@@ -5,13 +5,13 @@ import pandas as pd
 import urllib
 
 from ..model import engine
-from ..ref_data import SCRAPER_TICKER_MAP
+from ..ref_data import TICKER_MAP
 from openpyxl import load_workbook
 
 
 def ssga_base_processing_fn(row_list, eff_date, index_name):
     name = row_list[0]
-    ticker = SCRAPER_TICKER_MAP.get(row_list[1]) or row_list[1]
+    ticker = TICKER_MAP.get(row_list[1]) or row_list[1]
     weight = row_list[4]
     sector = row_list[5]
     shares = row_list[6]

@@ -34,4 +34,12 @@ class PriceData(Base):
     low = Column(Float)
     close = Column(Float)
     volume = Column(Float)
+    dividends = Column(Float)
     stock_splits = Column(Float)
+
+
+class TechnicalIndicatorData(Base):
+    __tablename__ = 'indicators'
+    idate = Column(Date, nullable=False, primary_key=True)
+    ticker = Column(String, primary_key=True)
+
