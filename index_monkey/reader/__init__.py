@@ -7,9 +7,22 @@ import pandas as pd
 from ..constants import DB_NAME
 from ..ref_data import TICKER_MAP
 
+
 @lru_cache()
 def connection():
     return sqlite3.connect(DB_NAME)
+
+
+def get_sectors(index_name):
+    query = f'''
+    SELECT
+    DISTINCT im.sector
+    FROM index_membership im
+    WHERE im.index_name = '{index_name}'
+    '''
+    df = pd.read_sql_query(query, connection())
+    sectors = df['sector'].unique()
+    return sectors
 
 
 class MembershipReader:
@@ -66,13 +79,19 @@ class MembershipReader:
 
 class PriceReader:
 
-    def __init__(self, indexname, start_date=None, end_date=None, use_latest_index_weighting=False):
+    def __init__(self,
+                 indexname,
+                 start_date=None,
+                 end_date=None,
+                 index_start_date=None,
+                 index_end_date=None,
+                 use_latest_index_weighting=False):
         self.indexname = indexname
-        self.member_reader = MembershipReader(self.indexname, start_date=start_date, end_date=end_date,
+        self.member_reader = MembershipReader(self.indexname, start_date=index_start_date, end_date=index_end_date,
                                               use_latest_date=use_latest_index_weighting)
         self.member_df = self.member_reader.load()
-        self.start_date = None if use_latest_index_weighting else self.member_reader.start_date
-        self.end_date = None if use_latest_index_weighting else self.member_reader.end_date
+        self.start_date = start_date
+        self.end_date = end_date
         self._loaded_prices = None
 
     @property

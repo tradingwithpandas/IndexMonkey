@@ -17,8 +17,17 @@ def connection():
 
 class PriceLoader(PriceReader):
 
-    def __init__(self, indexname, start_date=None, end_date=None, use_latest_index_comp=False):
-        super().__init__(indexname, start_date, end_date, use_latest_index_weighting=use_latest_index_comp)
+    def __init__(self,
+                 indexname,
+                 start_date=None,
+                 end_date=None,
+                 index_start_date=None,
+                 index_end_date=None,
+                 use_latest_index_weighting=False):
+        super().__init__(indexname, start_date, end_date, index_start_date, index_end_date,
+                         use_latest_index_weighting=use_latest_index_weighting)
+        self.query_start_date = self.start_date or start_date
+        self.query_end_date = self.end_date or end_date
         self._loaded_prices = None
 
     @property
@@ -56,8 +65,8 @@ class PriceLoader(PriceReader):
         return yf_query_args
 
     def _load_ticker_data_from_yf(self, tickers, start_date=None, end_date=None, refresh=False):
-        start_date = start_date or self.start_date
-        end_date = end_date or self.end_date
+        start_date = start_date or self.query_start_date
+        end_date = end_date or self.query_end_date
         query = self.construct_query(tickers, start_date, end_date)
         full_px_history = self.load(query)
 
@@ -77,21 +86,22 @@ class PriceLoader(PriceReader):
                 errored_tickers.append(ticker)
                 continue
 
-            px_hist['ticker'] = ticker
-            px_hist = px_hist.reset_index()
-            px_hist = px_hist.rename(columns={'Date': 'pdate', 'Open': 'open', 'High': 'high', 'Low': 'low',
-                                              'Close': 'close', 'Volume': 'volume', 'Dividends': 'dividends',
-                                              'Stock Splits': 'stock_splits'})
-            px_hist['pdate'] = px_hist['pdate'].apply(lambda dt: dt.date())
-            if 'stock_splits' not in px_hist.columns:
-                print(ticker)
-            px_hist = px_hist[['pdate', 'ticker', 'open', 'high', 'low', 'close', 'volume', 'dividends',
-                               'stock_splits']]
-            if full_px_history is not None:
-                full_px_history = pd.concat([full_px_history, px_hist])
-            else:
-                full_px_history = px_hist
+            if not px_hist.empty:
+                px_hist['ticker'] = ticker
+                px_hist = px_hist.reset_index()
+                px_hist = px_hist.rename(columns={'Date': 'pdate', 'Open': 'open', 'High': 'high', 'Low': 'low',
+                                                  'Close': 'close', 'Volume': 'volume', 'Dividends': 'dividends',
+                                                  'Stock Splits': 'stock_splits'})
+                px_hist['pdate'] = px_hist['pdate'].apply(lambda dt: dt.date())
+                if 'stock_splits' not in px_hist.columns:
+                    print(ticker)
+                if full_px_history is not None:
+                    full_px_history = pd.concat([full_px_history, px_hist])
+                else:
+                    full_px_history = px_hist
 
+        full_px_history = full_px_history[['pdate', 'ticker', 'open', 'high', 'low', 'close', 'volume', 'dividends',
+                                           'stock_splits']]
         return full_px_history, errored_tickers
 
     def _load_prices_from_yf(self):
