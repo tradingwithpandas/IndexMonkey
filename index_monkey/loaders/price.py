@@ -92,6 +92,7 @@ class PriceLoader(PriceReader):
                 px_hist = px_hist.rename(columns={'Date': 'pdate', 'Open': 'open', 'High': 'high', 'Low': 'low',
                                                   'Close': 'close', 'Volume': 'volume', 'Dividends': 'dividends',
                                                   'Stock Splits': 'stock_splits'})
+                px_hist = px_hist.loc[(px_hist['pdate'].dt.date >= start_date) & (px_hist['pdate'].dt.date <= end_date)]
                 px_hist['pdate'] = px_hist['pdate'].apply(lambda dt: dt.date())
                 if 'stock_splits' not in px_hist.columns:
                     print(ticker)
