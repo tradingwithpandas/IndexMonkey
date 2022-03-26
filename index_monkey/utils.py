@@ -30,3 +30,11 @@ def split_list(full_list, split_size):
     for i in range(0, len(full_list), split_size):
         split_lists.append(full_list[i:i+split_size])
     return split_lists
+
+
+def daterange(start_date, end_date, ignore_weekends=False):
+    eff_date = start_date
+    while eff_date <= end_date:
+        if eff_date.isoweekday() not in (6, 7):
+            yield eff_date
+        eff_date = eff_date + datetime.timedelta(days=1)
