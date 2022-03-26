@@ -3,6 +3,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.ticker import PercentFormatter
 from index_monkey.analysis.seasonality import get_historic_specific_month_performance
+import yfinance as yf
 
 MONTH_MAP = {
     1: 'Jan',
@@ -67,11 +68,34 @@ def _prepare_data_for_ticker_month_comparison(ticker1, t1_month1, t1_month2, tic
     return combined_data
 
 
-def plot_seasonal_performance_between_tickers_and_months(ticker1, t1_month1, t1_month2, ticker2, t2_month1, t2_month2):
+def plot_seasonal_performance_between_tickers_and_months(ticker1,
+                                                         t1_month1,
+                                                         t1_month2,
+                                                         ticker2,
+                                                         t2_month1,
+                                                         t2_month2,
+                                                         save_file_name=''
+                                                         ):
+    '''
+    Function to create a Seaborn barplot to compare side by side, the average performance of 2 tickers between 2
+    specific months of every year since it started trading. Example below
+
+    >>> plot_seasonal_performance_between_tickers_and_months('XBI', 12, 1, 'XBI', 1, 2, save_file_name='chart.png')
+
+
+    :param ticker1:
+    :param t1_month1:
+    :param t1_month2:
+    :param ticker2:
+    :param t2_month1:
+    :param t2_month2:
+    :param save_file_name:
+    :return:
+    '''
     combined_data = _prepare_data_for_ticker_month_comparison(ticker1, t1_month1, t1_month2, ticker2, t2_month1,
                                                               t2_month2)
     fig, ax = plt.subplots(figsize=(10, 8))
-
+    fig.autofmt_xdate()
     chart_title_month_str = 'Comparison across months' if t1_month1 != t2_month1 and t1_month2 != t2_month2 else ''
     if ticker1 != ticker2:
         chart_title = f'{ticker1} vs {ticker2} {chart_title_month_str}'
@@ -84,4 +108,27 @@ def plot_seasonal_performance_between_tickers_and_months(ticker1, t1_month1, t1_
     plt.legend(loc='best')
     graph.yaxis.set_major_formatter(PercentFormatter(1))
     sns.despine()
+    if save_file_name:
+        plt.savefig(save_file_name)
 
+
+def two_asset_chart(ticker1, ticker2, start_date, end_date, ticker1_df_override=None, ticker2_df_override=None):
+    tk1 = yf.Ticker(ticker1)
+    tk2 = yf.Ticker(ticker2)
+
+    passed_valid_ticker1_override = ticker1_df_override is not None and not ticker1_df_override.empty
+    tk1_hist = ticker1_df_override if passed_valid_ticker1_override else tk1.history(start=start_date, end=end_date)
+    tk1_hist = tk1_hist[start_date:end_date]
+    tk1_hist = tk1_hist.reset_index()
+    passed_valid_ticker2_override = ticker2_df_override is not None and not ticker2_df_override.empty
+    tk2_hist = ticker2_df_override if passed_valid_ticker2_override else tk2.history(start=start_date, end=end_date)
+    tk2_hist = tk2_hist[start_date:end_date]
+    tk2_hist = tk2_hist.reset_index()
+
+    fig, ax = plt.subplots(figsize=(16, 10))
+    fig.autofmt_xdate()
+    graph = sns.lineplot(x='Date', y='Close', data=tk1_hist, color='blue')
+    graph2 = graph.twinx()
+    graph2 = sns.lineplot(x='Date', y='Close', data=tk2_hist, color='green')
+    # ax.legend([graph, graph2], [ticker1, ticker2], loc=0)
+    ax.legend()
