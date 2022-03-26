@@ -56,5 +56,6 @@ def scrape_ssga(url, index_name, processing_fn=None):
                 cleaned_rows.append(cleaned_row)
 
         cleaned_index_members_df = pd.DataFrame(cleaned_rows)
+        cleaned_index_members_df = cleaned_index_members_df[cleaned_index_members_df['ticker'] != '']
         cleaned_index_members_df.to_sql('index_membership', con=engine, if_exists='append', index=False)
         return cleaned_index_members_df
