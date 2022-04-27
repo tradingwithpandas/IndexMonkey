@@ -30,6 +30,6 @@ def fetch_prices(start_date=None, end_date=None, indices=None):
 
 
 if __name__ == '__main__':
-    end_date = datetime.date.today() - BDay(1)
+    end_date = datetime.date.today()
     start_date = end_date
     fetch_prices(start_date=start_date, end_date=end_date)
