@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 from functools import lru_cache
 from json.decoder import JSONDecodeError
@@ -8,6 +9,7 @@ import yfinance as yf
 from index_monkey.constants import DB_NAME
 from index_monkey.model import engine
 from index_monkey.reader import PriceReader
+from pandas.tseries.offsets import BDay
 
 
 @lru_cache()
@@ -54,14 +56,20 @@ class PriceLoader(PriceReader):
         yf_query_args = {}
         for ticker in tickers:
             ticker_df = data_in_db[data_in_db['ticker'] == ticker]
+            query_start_date = start_date
+            query_end_date = end_date + datetime.timedelta(days=1)
             if not refresh:
                 if not ticker_df.empty:
                     ticker_start_date = ticker_df['pdate'].min().to_pydatetime().date()
                     ticker_end_date = ticker_df['pdate'].max().to_pydatetime().date()
                     if self.is_date_range_covered(ticker_start_date, ticker_end_date, start_date, end_date):
-                        # No need to query from YF again in this case. Just use what we got from the DB
+                        # No need to query from YF again in this case. Just use what we have in the DB
                         continue
-            yf_query_args[ticker] = {'start': start_date, 'end': end_date}
+                    else:
+                        # having to use 2 days because yfinance starts from the day before 'start' date
+                        query_start_date = max(start_date, ticker_start_date, ticker_end_date) + BDay(2)
+                        query_end_date = max(query_start_date, end_date)
+            yf_query_args[ticker] = {'start': query_start_date, 'end': query_end_date}
         return yf_query_args
 
     def _load_ticker_data_from_yf(self, tickers, start_date=None, end_date=None, refresh=False):
@@ -76,7 +84,7 @@ class PriceLoader(PriceReader):
                                                                           end_date,
                                                                           refresh)
         errored_tickers = []
-
+        px_hist_to_insert = full_px_history.iloc[:0].copy()
         for index, (ticker, yf_args) in enumerate(ticker_yf_args.items()):
             yf_ticker = yf.Ticker(ticker)
 
@@ -96,14 +104,13 @@ class PriceLoader(PriceReader):
                 px_hist['pdate'] = px_hist['pdate'].apply(lambda dt: dt.date())
                 if 'stock_splits' not in px_hist.columns:
                     print(ticker)
-                if full_px_history is not None:
-                    full_px_history = pd.concat([full_px_history, px_hist])
-                else:
-                    full_px_history = px_hist
 
-        full_px_history = full_px_history[['pdate', 'ticker', 'open', 'high', 'low', 'close', 'volume', 'dividends',
-                                           'stock_splits']]
-        return full_px_history, errored_tickers
+                px_hist_to_insert = pd.concat([px_hist_to_insert, px_hist])
+                print(f'{index} / {len(ticker_yf_args)} Downloaded')
+
+        px_hist_to_insert = px_hist_to_insert[['pdate', 'ticker', 'open', 'high', 'low', 'close', 'volume', 'dividends',
+                                               'stock_splits']]
+        return px_hist_to_insert, errored_tickers
 
     def _load_prices_from_yf(self):
         full_px_history = None
