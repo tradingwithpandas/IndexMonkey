@@ -1,7 +1,6 @@
 from index_monkey.scrapers import snp500, xlb, xlc, xle, xlf, xli, xlk, xlp, xlre, xlu, xlv, xly
 import datetime
 from index_monkey.loaders.price import PriceLoader
-from pandas.tseries.offsets import BDay
 
 INDEX_NAMES = [
     xlb.INDEX_NAME,
@@ -30,6 +29,6 @@ def fetch_prices(start_date=None, end_date=None, indices=None):
 
 
 if __name__ == '__main__':
-    end_date = datetime.date.today()
-    start_date = end_date
+    start_date = datetime.date.today()
+    end_date = start_date + datetime.timedelta(days=1)
     fetch_prices(start_date=start_date, end_date=end_date)
