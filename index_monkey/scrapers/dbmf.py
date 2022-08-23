@@ -1,5 +1,5 @@
 import pandas as pd
-from index_monkey.model import engine
+from index_monkey.model import engine, session, DBMFHoldings
 import datetime
 
 
@@ -21,8 +21,17 @@ def pull_dbmf_holdings():
     return dbmf_df
 
 
+def fetch_most_recent_date(holding_date):
+    db_session = session()
+    query = db_session.query(DBMFHoldings).filter(DBMFHoldings.hdate == holding_date)
+    holdings_df = pd.read_sql(query.statement, engine)
+    return holdings_df
+
+
 def insert_dbmf_holdings(dbmf_holdings):
-    dbmf_holdings.to_sql('dbmf_holdings', con=engine, if_exists='append', index=False)
+    holding_date = dbmf_holdings['hdate'].unique()[0] if dbmf_holdings['hdate'].unique() else None
+    if holding_date is None:  # Data for this date doesn't exist already and hence we need to store this data
+        dbmf_holdings.to_sql('dbmf_holdings', con=engine, if_exists='append', index=False)
 
 
 if __name__ == '__main__':
