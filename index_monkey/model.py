@@ -43,3 +43,13 @@ class TechnicalIndicatorData(Base):
     idate = Column(Date, nullable=False, primary_key=True)
     ticker = Column(String, primary_key=True)
 
+
+class DBMFHoldings(Base):
+    __tablename__ = 'dbmf_holdings'
+    hdate = Column(Date, nullable=False, primary_key=True)
+    cusip = Column(String, primary_key=True)
+    ticker = Column(String, primary_key=True)
+    description = Column(String)
+    shares = Column(Float, nullable=False)
+    mv = Column(Float, nullable=False)
+    weight = Column(Float, nullable=False)
