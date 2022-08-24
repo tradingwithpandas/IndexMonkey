@@ -21,16 +21,26 @@ def pull_dbmf_holdings():
     return dbmf_df
 
 
-def fetch_most_recent_date(holding_date):
+def fetch_holdings_on_date(holding_date):
     db_session = session()
     query = db_session.query(DBMFHoldings).filter(DBMFHoldings.hdate == holding_date)
     holdings_df = pd.read_sql(query.statement, engine)
     return holdings_df
 
 
+def date_has_holdings(holding_date):
+    most_recent_holdings = fetch_holdings_on_date(holding_date)
+    if not most_recent_holdings.empty:
+        holding_date = most_recent_holdings['hdate'].unique()[0]
+    else:
+        holding_date = None
+    return holding_date
+
+
 def insert_dbmf_holdings(dbmf_holdings):
     holding_date = dbmf_holdings['hdate'].unique()[0] if dbmf_holdings['hdate'].unique() else None
-    if holding_date is None:  # Data for this date doesn't exist already and hence we need to store this data
+    # Data for this date doesn't exist already and hence we need to store this data
+    if not date_has_holdings(holding_date):
         dbmf_holdings.to_sql('dbmf_holdings', con=engine, if_exists='append', index=False)
 
 
