@@ -53,3 +53,12 @@ class DBMFHoldings(Base):
     shares = Column(Float, nullable=False)
     mv = Column(Float, nullable=False)
     weight = Column(Float, nullable=False)
+
+
+class ETFStats(Base):
+    __tablename__ = 'etf_stats'
+    sdate = Column(Date, nullable=False, primary_key=True)
+    ticker = Column(String, primary_key=True)
+    nav = Column(Float)
+    shares_outstanding = Column(Float)
+    aum = Column(Float)
