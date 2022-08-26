@@ -1,9 +1,9 @@
 import pandas as pd
 import datetime
-from index_monkey.model import engine, session, DBMFHoldings, ETFStats
 # from constants import INDEX_MONKEY_PATH
 # import sys
 # sys.path.append(INDEX_MONKEY_PATH)
+from index_monkey.model import engine, session, DBMFHoldings, ETFStats
 
 
 DBMF_HOLDINGS_LINK = 'https://partnerselectfunds.com/wp-content/uploads/Holdings/DBMF-Holdings.xlsx'
