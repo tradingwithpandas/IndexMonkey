@@ -55,6 +55,20 @@ class DBMFHoldings(Base):
     weight = Column(Float, nullable=False)
 
 
+class ManagedFuturesHoldings(Base):
+    __tablename__ = 'mgd_futures_etfs'
+    hdate = Column(Date, nullable=False, primary_key=True)
+    etf = Column(String, nullable=False, primary_key=True)
+    cusip = Column(String, primary_key=True)
+    ticker = Column(String, primary_key=True)
+    description = Column(String, nullable=False)
+    asset = Column(String, nullable=False)
+    expiry = Column(Date)
+    shares = Column(Float, nullable=False)
+    mv = Column(Float, nullable=False)
+    weight = Column(Float, nullable=False)
+
+
 class ETFStats(Base):
     __tablename__ = 'etf_stats'
     sdate = Column(Date, nullable=False, primary_key=True)

@@ -3,7 +3,7 @@ import datetime
 # from constants import INDEX_MONKEY_PATH
 # import sys
 # sys.path.append(INDEX_MONKEY_PATH)
-from index_monkey.model import engine, session, DBMFHoldings, ETFStats
+from index_monkey.model import engine, session, DBMFHoldings, ManagedFuturesHoldings, ETFStats
 
 
 DBMF_HOLDINGS_LINK = 'https://partnerselectfunds.com/wp-content/uploads/Holdings/DBMF-Holdings.xlsx'
@@ -26,6 +26,9 @@ def pull_dbmf_holdings():
     dbmf_df = pd.read_excel(DBMF_HOLDINGS_LINK, skiprows=5)
     dbmf_df = dbmf_df[['DATE', 'CUSIP', 'TICKER', 'DESCRIPTION', 'SHARES', 'BASE_MV',
                        'PCT_HOLDINGS']]
+    dbmf_df['asset'] = dbmf_df['DESCRIPTION'].apply(lambda desc: desc[:-5])
+    dbmf_df['expiry'] = dbmf_df['DESCRIPTION'].apply(lambda desc: datetime.datetime.strptime(desc[-5:], '%b%y').date())
+    dbmf_df['etf'] = 'DBMF'
     dbmf_df['DATE'] = dbmf_df['DATE'].apply(lambda dt: datetime.datetime.strptime(str(dt), '%Y%m%d').date())
     dbmf_df = dbmf_df.rename(columns={'DATE': 'hdate',
                                       'CUSIP': 'cusip',
@@ -37,22 +40,23 @@ def pull_dbmf_holdings():
     return dbmf_df
 
 
-def fetch_holdings_on_date(holding_date):
+def fetch_holdings_on_date(holding_date, etf_ticker):
     db_session = session()
-    query = db_session.query(DBMFHoldings).filter(DBMFHoldings.hdate == holding_date)
+    query = db_session.query(ManagedFuturesHoldings).filter(ManagedFuturesHoldings.hdate == holding_date)\
+        .filter(ManagedFuturesHoldings.etf == etf_ticker)
     holdings_df = pd.read_sql(query.statement, engine)
     return holdings_df
 
 
-def fetch_stats_on_date(stat_date, ticker):
+def fetch_stats_on_date(stat_date, etf_ticker):
     db_session = session()
-    query = db_session.query(ETFStats).filter(ETFStats.sdate == stat_date).filter(ETFStats.ticker == ticker)
+    query = db_session.query(ETFStats).filter(ETFStats.sdate == stat_date).filter(ETFStats.ticker == etf_ticker)
     stat_df = pd.read_sql(query.statement, engine)
     return stat_df
 
 
-def date_has_holdings(holding_date, df_fetch_fn, date_col, **kwargs):
-    most_recent_holdings = df_fetch_fn(holding_date, **kwargs)
+def date_has_holdings(holding_date, df_fetch_fn, date_col, ticker, **kwargs):
+    most_recent_holdings = df_fetch_fn(holding_date, ticker, **kwargs)
     if not most_recent_holdings.empty:
         holding_date = most_recent_holdings[date_col].unique()[0]
     else:
@@ -63,8 +67,8 @@ def date_has_holdings(holding_date, df_fetch_fn, date_col, **kwargs):
 def insert_dbmf_holdings(dbmf_holdings):
     holding_date = dbmf_holdings['hdate'].unique()[0] if dbmf_holdings['hdate'].unique() else None
     # Data for this date doesn't exist already and hence we need to store this data
-    if not date_has_holdings(holding_date, fetch_holdings_on_date, 'hdate'):
-        dbmf_holdings.to_sql('dbmf_holdings', con=engine, if_exists='append', index=False)
+    if not date_has_holdings(holding_date, fetch_holdings_on_date, 'hdate', ticker='DBMF'):
+        dbmf_holdings.to_sql('mgd_futures_etfs', con=engine, if_exists='append', index=False)
 
 
 def insert_dbmf_stats(dbmf_stats):
