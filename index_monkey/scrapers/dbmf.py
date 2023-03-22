@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import datetime
 # from constants import INDEX_MONKEY_PATH
 # import sys
@@ -22,12 +23,22 @@ def pull_dbmf_etf_stats():
     return dbmf_df
 
 
+def parse_expiry(asset_desc):
+    expiry_str = asset_desc[-5:].strip()
+    try:
+        expiry = datetime.datetime.strptime(expiry_str, '%b%y').date()
+    except ValueError:
+        expiry = None
+    return expiry
+
+
 def pull_dbmf_holdings():
     dbmf_df = pd.read_excel(DBMF_HOLDINGS_LINK, skiprows=5)
     dbmf_df = dbmf_df[['DATE', 'CUSIP', 'TICKER', 'DESCRIPTION', 'SHARES', 'BASE_MV',
                        'PCT_HOLDINGS']]
+    dbmf_df['expiry'] = dbmf_df['DESCRIPTION'].apply(parse_expiry)
     dbmf_df['asset'] = dbmf_df['DESCRIPTION'].apply(lambda desc: desc[:-5].strip())
-    dbmf_df['expiry'] = dbmf_df['DESCRIPTION'].apply(lambda desc: datetime.datetime.strptime(desc[-5:], '%b%y').date())
+    dbmf_df['asset'] = np.where(dbmf_df['expiry'].isnull(), dbmf_df['DESCRIPTION'], dbmf_df['asset'])
     dbmf_df['etf'] = 'DBMF'
     dbmf_df['DATE'] = dbmf_df['DATE'].apply(lambda dt: datetime.datetime.strptime(str(dt), '%Y%m%d').date())
     dbmf_df = dbmf_df.rename(columns={'DATE': 'hdate',
