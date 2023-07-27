@@ -11,9 +11,9 @@ def _fill_between_line_chart(axis, data_df, fill_between_args):
 
 
 def multiline_chart(data_df,
-                    x_col,
-                    y1_col,
-                    y1_hue_col=None,
+                    x_col='Date',
+                    y1_col='value',
+                    y1_hue_col='variable',
                     y1_hue_filter=None,
                     y2_col=None,
                     y2_hue_col=None,
