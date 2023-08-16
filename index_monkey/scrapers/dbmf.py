@@ -7,7 +7,7 @@ import datetime
 from index_monkey.model import engine, session, DBMFHoldings, ManagedFuturesHoldings, ETFStats
 
 
-DBMF_HOLDINGS_LINK = 'https://partnerselectfunds.com/wp-content/uploads/Holdings/DBMF-Holdings.xlsx'
+DBMF_HOLDINGS_LINK = 'https://imgpfunds.com/wp-content/uploads/pdfs/holdings/DBMF-Holdings.xlsx'
 
 
 def pull_dbmf_etf_stats():
