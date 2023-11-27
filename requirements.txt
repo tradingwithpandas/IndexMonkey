@@ -6,3 +6,7 @@ SQLAlchemy
 requests
 seaborn
 matplotlib
+jinja2
+bs4
+lxml
+yahooquery
