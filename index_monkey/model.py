@@ -4,13 +4,13 @@ from sqlalchemy import create_engine
 from sqlalchemy import Column, ForeignKey, BigInteger, Date, Float, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
-from .constants import DB_NAME, NEW_DB_NAME
+from .constants import DB_NAME, INV_TRUST_DB_NAME
 
 engine = create_engine('sqlite:///{}?check_same_thread=False'.format(DB_NAME), pool_pre_ping=True)
-new_engine = create_engine('sqlite:///{}?check_same_thread=False'.format(NEW_DB_NAME), pool_pre_ping=True)
+new_engine = create_engine('sqlite:///{}?check_same_thread=False'.format(INV_TRUST_DB_NAME), pool_pre_ping=True)
 Base = declarative_base()
 Session = scoped_session(sessionmaker(bind=engine, autoflush=False))
-CON = sqlite3.connect(NEW_DB_NAME)
+CON = sqlite3.connect(INV_TRUST_DB_NAME)
 
 def session():
     s = sessionmaker(bind=engine)
