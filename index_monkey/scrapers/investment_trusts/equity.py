@@ -79,7 +79,7 @@ class InvTrustHoldings:
     @staticmethod
     def upload_holdings():
         for trust in INV_TRUST_MAP:
-            logger.info(f'fetching {trust}')
+            logger.info(f'fetching holdings for {trust}')
             trust_holdings = InvTrustHoldings.get_inv_trust_top_10(trust)
             if trust_holdings is not None:
                 for row in trust_holdings.iterrows():
@@ -91,9 +91,9 @@ class InvTrustHoldings:
                         row[1]['weight'],
                         row[1]['qty'],
                     )
-                logger.info(f'finished fetching {trust}')
+                logger.info(f'finished fetching holdings {trust}')
             else:
-                logger.info(f'nothing to fetch for {trust}')
+                logger.info(f'no holdings to fetch for {trust}')
 
 
 class InvTrustStats:
@@ -225,7 +225,7 @@ class InvTrustStats:
     @staticmethod
     def upload_stats():
         for trust in INV_TRUST_MAP:
-            logger.info(f'fetching {trust}')
+            logger.info(f'fetching stats for {trust}')
             stats = InvTrustStats.get_inv_trust_stats(trust)
             if stats is not None:
                 for row in stats.iterrows():
@@ -244,9 +244,9 @@ class InvTrustStats:
                         row[1]['shs_outstanding'],
                         row[1]['tsy_shs'],
                     )
-                logger.info(f'finished fetching {trust}')
+                logger.info(f'finished fetching stats for {trust}')
             else:
-                logger.info(f'nothing to fetch for {trust}')
+                logger.info(f'no stats to fetch for {trust}')
 
 
 def upload_stats():
